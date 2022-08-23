@@ -1,4 +1,4 @@
-import NavBar from "components/navigation/Navbar";
+import Navbar from "components/navigation/Navbar";
 import Footer from "components/navigation/Footer";
 import { connect } from 'react-redux';
 import Alert from "components/alert";
@@ -6,7 +6,7 @@ import Alert from "components/alert";
 const FullWidthLayout = ({children}) => {
   return (
     <div>
-      <NavBar/>
+      <Navbar/>
       {children}
       <Footer/>
       <Alert/>
