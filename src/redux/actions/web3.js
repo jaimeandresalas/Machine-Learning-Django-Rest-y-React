@@ -11,73 +11,85 @@ import {
 } from "./types";
 
 import { ethers } from "ethers";
+import { create_user, get_my_user_details } from "./user";
+export const loadWeb3 = () => async dispatch => {
+    if(window.ethereum){
+        const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+        });
+        localStorage.setItem("account", accounts[0]);
+        dispatch({
+            type: LOAD_WEB3_SUCCESS,
+            payload: accounts[0],
+        });
 
-export const loadWeb3 = () => async dispatch =>{
-  if (window.ethereum){
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts", 
-    });
-    localStorage.setItem("account", accounts[0]);
-    dispatch({
-      type: LOAD_WEB3_SUCCESS,
-      payload: accounts[0],
+        // Cargar Ethereum bALANCE
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const balance = await provider.getBalance(accounts[0]);
+        const balanceInEth = ethers.utils.formatEther(balance);
 
-    });
-    //Cargar Ethereum Balance Account
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const balance = await provider.getBalance(accounts[0]);
-    const balanceInEth = ethers.utils.formatEther(balance);
+        dispatch({
+            type: LOAD_ETHEREUM_BALANCE_SUCCESS,
+            payload: balanceInEth,
+        });
 
-    dispatch({
-      type: LOAD_ETHEREUM_BALANCE_SUCCESS,
-      payload: balanceInEth,
-
-    });
-  } else {
-    dispatch({
-      type: LOAD_WEB3_FAIL,
-    });
-    dispatch({
-      type: LOAD_ETHEREUM_BALANCE_FAIL,
-    });
-  }
+    } else {
+        dispatch({
+            type: LOAD_WEB3_FAIL,
+        });
+        dispatch({
+            type: LOAD_ETHEREUM_BALANCE_FAIL,
+        });
+    }
 }
 
+
 export const loginWeb3 = () => async dispatch => {
-  dispatch({
-    type: SET_LOADING,
-    payload: true,
-  });
-
-  if (window.ethereum) {
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    //Cargar Ethereum Balance Account
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const balance = await provider.getBalance(accounts[0]);
-    const balanceInEth = ethers.utils.formatEther(balance);
-    
     dispatch({
-      type: LOAD_ETHEREUM_BALANCE_SUCCESS,
-      payload: balanceInEth,
-      
-    });
-    
-    //// Crear Usuario de DJANGO
-
-
-    await dispatch({
-      type: SET_LOADING,
-      payload: false,
+        type: SET_LOADING,
+        payload: true,
     });
 
-    localStorage.setItem("account", accounts[0]);
-    dispatch({
-      type: LOAD_WEB3_SUCCESS,
-      payload: accounts[0],
-    });
-  }
+    if (window.ethereum) {
+        const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+        });
+
+        // Cargar Ethereum bALANCE
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const balance = await provider.getBalance(accounts[0]);
+        const balanceInEth = ethers.utils.formatEther(balance);
+        dispatch({
+            type: LOAD_ETHEREUM_BALANCE_SUCCESS,
+            payload: balanceInEth,
+        });
+
+        // CREAR USUARIO DE DJANGO
+        await dispatch(create_user())
+        await dispatch(get_my_user_details())
+
+        await dispatch({
+            type: SET_LOADING,
+            payload: false,
+        });
+
+        localStorage.setItem("account", accounts[0]);
+        dispatch({
+            type: LOAD_WEB3_SUCCESS,
+            payload: accounts[0],
+        });
+    } else {
+        dispatch({
+            type: LOAD_WEB3_FAIL,
+        });
+        await dispatch({
+            type: SET_LOADING,
+            payload: false,
+        });
+        dispatch({
+            type: LOAD_ETHEREUM_BALANCE_FAIL,
+        });
+    }
 }
 
 
@@ -97,5 +109,3 @@ export const get_network_id = () => async (dispatch) => {
         });
     }
 };
-
-
